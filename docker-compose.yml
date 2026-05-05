@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
+    volumes:
+      - ./data:/srv/app/data
     environment:
       PRINTER_HOST: ${PRINTER_HOST:-192.168.15.26}
       PRINTER_PORT: ${PRINTER_PORT:-9100}
@@ -13,3 +15,7 @@ services:
       IMAGE_FETCH_TIMEOUT: ${IMAGE_FETCH_TIMEOUT:-5}
       IMAGE_MAX_BYTES: ${IMAGE_MAX_BYTES:-5242880}
       TZ: ${TZ:-America/Sao_Paulo}
+      DEFAULT_SCHEDULE_TIME: ${DEFAULT_SCHEDULE_TIME:-09:00}
+      SCHEDULER_TZ: ${SCHEDULER_TZ:-America/Sao_Paulo}
+      MISFIRE_GRACE_HOURS: ${MISFIRE_GRACE_HOURS:-24}
+      SCHEDULER_DB_PATH: ${SCHEDULER_DB_PATH:-/srv/app/data/schedules.sqlite}

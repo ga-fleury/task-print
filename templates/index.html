@@ -6,7 +6,10 @@
     print-task
     {% if dry_run %}<span class="dry-run-badge" title="DRY_RUN=1: no actual printing">DRY RUN</span>{% endif %}
   </h1>
-  <button id="cheatsheet-btn" class="icon-btn" type="button" aria-label="Syntax help">?</button>
+  <div class="header-actions">
+    <a href="/schedules" class="header-link" title="View scheduled tasks">Schedules</a>
+    <button id="cheatsheet-btn" class="icon-btn" type="button" aria-label="Syntax help">?</button>
+  </div>
 </header>
 
 <nav class="tabs" aria-label="View toggle">
@@ -42,6 +45,9 @@
   <button id="print-btn" type="button" class="btn-primary" disabled>
     <span id="print-label">Print</span>
   </button>
+  <button id="schedule-btn" type="button" class="btn-secondary" disabled title="Schedule the editor content for later">
+    Schedule…
+  </button>
   <button id="test-btn" type="button" class="btn-secondary" title="Print a fixed sample strip to verify the printer">
     Test print
   </button>
@@ -51,4 +57,5 @@
 <div id="toasts" aria-live="polite"></div>
 
 {% include "_cheatsheet.html" %}
+{% include "_schedule_modal.html" %}
 {% endblock %}

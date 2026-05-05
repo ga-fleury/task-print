@@ -9,3 +9,7 @@ venv/
 *.egg-info/
 dist/
 build/
+/data/*
+!/data/.gitkeep
+*.sqlite
+*.sqlite-journal

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block body %}
+<header class="app-header">
+  <h1>
+    print-task — Schedules
+    {% if dry_run %}<span class="dry-run-badge" title="DRY_RUN=1: no actual printing">DRY RUN</span>{% endif %}
+  </h1>
+  <div class="header-actions">
+    <a href="/" class="header-link">← Editor</a>
+  </div>
+</header>
+
+<main class="schedules-main">
+  <section class="schedules-section">
+    <div class="pane-header">Active schedules ({{ schedules|length }})</div>
+    {% if schedules %}
+    <ul class="schedules-list">
+      {% for s in schedules %}
+      <li class="schedule-row" data-id="{{ s.id }}">
+        <details class="schedule-details">
+          <summary class="schedule-summary">
+            <span class="schedule-chevron" aria-hidden="true"></span>
+            <span class="schedule-summary-text">
+              <span class="schedule-preview">{{ s.preview or "(empty)" }}</span>
+              <span class="schedule-rule">{{ s.rule }}</span>
+              <span class="schedule-next">Next: <strong>{{ s.next_run }}</strong></span>
+            </span>
+          </summary>
+          <pre class="schedule-body">{{ s.body }}</pre>
+        </details>
+        <div class="schedule-row-actions">
+          <button type="button" class="btn-secondary schedule-fire" data-id="{{ s.id }}">Fire now</button>
+          <button type="button" class="btn-secondary schedule-delete" data-id="{{ s.id }}">Delete</button>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-preview">No schedules yet. Create one from the <a href="/">editor</a>.</div>
+    {% endif %}
+  </section>
+
+  <section class="schedules-section">
+    <details {% if history %}open{% endif %}>
+      <summary class="pane-header summary-header">Recent runs ({{ history|length }})</summary>
+      {% if history %}
+      <ul class="history-list">
+        {% for h in history %}
+        <li class="history-row history-{{ h.status }}">
+          <div class="history-ts">{{ h.ts.strftime("%a %b %d, %H:%M:%S") }}</div>
+          <div class="history-rule">{{ h.rule }}</div>
+          <div class="history-preview">{{ h.body_preview }}</div>
+          <div class="history-status">
+            <span class="status-badge status-{{ h.status }}">{{ h.status }}</span>
+            {% if h.attempts and h.attempts > 1 %}<span class="attempts">×{{ h.attempts }}</span>{% endif %}
+          </div>
+          {% if h.error %}<div class="history-error">{{ h.error }}</div>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty-preview" style="padding:1.5rem 1rem;">No runs yet.</div>
+      {% endif %}
+    </details>
+  </section>
+</main>
+
+<div id="toasts" aria-live="polite"></div>
+{% endblock %}

@@ -1,0 +1,52 @@
+<div id="schedule-modal" class="modal" role="dialog" aria-labelledby="schedule-title" aria-modal="true">
+  <div class="modal-content">
+    <h2 id="schedule-title">Schedule print</h2>
+    <p class="schedule-help">The current editor content will be printed at the chosen time.</p>
+
+    <form id="schedule-form" autocomplete="off">
+      <div class="schedule-row-grid">
+        <div class="schedule-field">
+          <label for="schedule-date">Date</label>
+          <input type="date" id="schedule-date" name="date" required>
+        </div>
+        <div class="schedule-field">
+          <label for="schedule-time">Time</label>
+          <input type="time" id="schedule-time" name="time" required value="{{ default_schedule_time }}">
+        </div>
+        <div class="schedule-field">
+          <label for="schedule-repeat">Repeat</label>
+          <select id="schedule-repeat" name="repeat">
+            <option value="never">Never</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="schedule-field schedule-weekly hidden" id="schedule-weekly-field">
+        <label>Weekdays</label>
+        <div class="weekday-picker">
+          <label><input type="checkbox" name="weekly_days" value="0"> Mon</label>
+          <label><input type="checkbox" name="weekly_days" value="1"> Tue</label>
+          <label><input type="checkbox" name="weekly_days" value="2"> Wed</label>
+          <label><input type="checkbox" name="weekly_days" value="3"> Thu</label>
+          <label><input type="checkbox" name="weekly_days" value="4"> Fri</label>
+          <label><input type="checkbox" name="weekly_days" value="5"> Sat</label>
+          <label><input type="checkbox" name="weekly_days" value="6"> Sun</label>
+        </div>
+      </div>
+
+      <p class="schedule-hint hidden" id="schedule-monthly-hint">
+        On the 31st: months with fewer days are skipped.
+      </p>
+
+      <div class="schedule-actions">
+        <a href="/schedules" class="btn-secondary schedule-link">View all schedules →</a>
+        <button type="button" id="schedule-cancel" class="btn-secondary">Cancel</button>
+        <button type="submit" id="schedule-submit" class="btn-primary">Schedule</button>
+      </div>
+    </form>
+  </div>
+</div>

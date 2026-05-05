@@ -8,17 +8,101 @@
   const IMG_MAX_WIDTH = 384;
   const IMG_QUALITY = 0.7;
 
+  const toastContainer = document.getElementById("toasts");
+
+  // ---- Toasts (shared by editor + schedules pages) ----
+
+  function makeToast(kind) {
+    const t = document.createElement("div");
+    t.className = `toast toast-${kind}`;
+    return t;
+  }
+
+  function dismissToast(t) {
+    if (!t.isConnected) return;
+    t.classList.add("toast-leaving");
+    setTimeout(() => t.remove(), 280);
+  }
+
+  function showToast(kind, message, durationMs) {
+    if (!toastContainer) return;
+    const t = makeToast(kind);
+    t.textContent = message;
+    toastContainer.appendChild(t);
+    setTimeout(() => dismissToast(t), durationMs || 4000);
+  }
+
+  // ---- Schedules page (list view) ----
+
+  const schedulesList = document.querySelector(".schedules-list");
+  if (schedulesList) {
+    schedulesList.addEventListener("click", async (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLButtonElement)) return;
+      const id = target.dataset.id;
+      if (!id) return;
+
+      if (target.classList.contains("schedule-delete")) {
+        if (!confirm("Delete this schedule?")) return;
+        target.disabled = true;
+        try {
+          const res = await fetch(`/schedules/${encodeURIComponent(id)}/delete`, { method: "POST" });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            const row = target.closest(".schedule-row");
+            if (row) row.remove();
+            showToast("success", "Schedule deleted");
+          } else {
+            showToast("error", `Delete failed: ${data.error || res.status}`);
+            target.disabled = false;
+          }
+        } catch (err) {
+          showToast("error", `Network error: ${err.message}`);
+          target.disabled = false;
+        }
+      } else if (target.classList.contains("schedule-fire")) {
+        target.disabled = true;
+        try {
+          const res = await fetch(`/schedules/${encodeURIComponent(id)}/fire`, { method: "POST" });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            showToast("success", "Firing now (running in background)");
+          } else {
+            showToast("error", `Fire failed: ${data.error || res.status}`);
+          }
+        } catch (err) {
+          showToast("error", `Network error: ${err.message}`);
+        } finally {
+          setTimeout(() => { target.disabled = false; }, 1500);
+        }
+      }
+    });
+    return; // schedules page has nothing else to wire
+  }
+
+  // ---- Editor page below ----
+
   const editor = document.getElementById("editor");
+  if (!editor) return; // not on editor page
+
   const printBtn = document.getElementById("print-btn");
   const printLabel = document.getElementById("print-label");
   const previewPane = document.getElementById("preview");
-  const toastContainer = document.getElementById("toasts");
   const cheatsheetBtn = document.getElementById("cheatsheet-btn");
   const cheatsheetModal = document.getElementById("cheatsheet-modal");
   const cheatsheetClose = document.getElementById("cheatsheet-close");
   const testBtn = document.getElementById("test-btn");
   const tabEdit = document.getElementById("tab-edit");
   const tabPreview = document.getElementById("tab-preview");
+  const scheduleBtn = document.getElementById("schedule-btn");
+  const scheduleModal = document.getElementById("schedule-modal");
+  const scheduleForm = document.getElementById("schedule-form");
+  const scheduleCancel = document.getElementById("schedule-cancel");
+  const scheduleSubmit = document.getElementById("schedule-submit");
+  const scheduleRepeat = document.getElementById("schedule-repeat");
+  const scheduleDate = document.getElementById("schedule-date");
+  const scheduleWeeklyField = document.getElementById("schedule-weekly-field");
+  const scheduleMonthlyHint = document.getElementById("schedule-monthly-hint");
 
   // ---- Draft persistence ----
 
@@ -50,9 +134,11 @@
     if (n === 0) {
       printLabel.textContent = "Print";
       printBtn.disabled = true;
+      if (scheduleBtn) scheduleBtn.disabled = true;
     } else {
       printLabel.textContent = `Print ${n} strip${n === 1 ? "" : "s"}`;
       printBtn.disabled = false;
+      if (scheduleBtn) scheduleBtn.disabled = false;
     }
   }
 
@@ -132,26 +218,7 @@
     });
   }
 
-  // ---- Toasts ----
-
-  function makeToast(kind) {
-    const t = document.createElement("div");
-    t.className = `toast toast-${kind}`;
-    return t;
-  }
-
-  function dismissToast(t) {
-    if (!t.isConnected) return;
-    t.classList.add("toast-leaving");
-    setTimeout(() => t.remove(), 280);
-  }
-
-  function showToast(kind, message, durationMs) {
-    const t = makeToast(kind);
-    t.textContent = message;
-    toastContainer.appendChild(t);
-    setTimeout(() => dismissToast(t), durationMs || 4000);
-  }
+  // ---- Restore-batch toast (success-action variant) ----
 
   function showRestoreToast(printedCount, savedText) {
     const t = makeToast("success");
@@ -178,14 +245,15 @@
   // ---- Keyboard ----
 
   document.addEventListener("keydown", (e) => {
+    const cheatsheetOpen = cheatsheetModal && cheatsheetModal.classList.contains("open");
+    const scheduleOpen = scheduleModal && scheduleModal.classList.contains("open");
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      if (cheatsheetModal && cheatsheetModal.classList.contains("open")) return;
+      if (cheatsheetOpen || scheduleOpen) return;
       e.preventDefault();
       if (!printBtn.disabled) printBtn.click();
     } else if (e.key === "Escape") {
-      if (cheatsheetModal && cheatsheetModal.classList.contains("open")) {
-        cheatsheetModal.classList.remove("open");
-      }
+      if (cheatsheetOpen) cheatsheetModal.classList.remove("open");
+      if (scheduleOpen) scheduleModal.classList.remove("open");
     }
   });
 
@@ -261,6 +329,87 @@
       }
     }
   });
+
+  // ---- Schedule modal ----
+
+  function todayISO() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function updateScheduleModalUI() {
+    if (!scheduleRepeat) return;
+    const repeat = scheduleRepeat.value;
+    if (scheduleWeeklyField) {
+      scheduleWeeklyField.classList.toggle("hidden", repeat !== "weekly");
+    }
+    if (scheduleMonthlyHint) {
+      const dayOfMonth = scheduleDate && scheduleDate.value
+        ? Number(scheduleDate.value.split("-")[2])
+        : 0;
+      const showHint = (repeat === "monthly" || repeat === "yearly") && dayOfMonth >= 29;
+      scheduleMonthlyHint.classList.toggle("hidden", !showHint);
+    }
+  }
+
+  function openScheduleModal() {
+    if (!scheduleModal) return;
+    if (scheduleDate && !scheduleDate.value) scheduleDate.value = todayISO();
+    if (scheduleRepeat) scheduleRepeat.value = "never";
+    if (scheduleWeeklyField) {
+      scheduleWeeklyField.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+    updateScheduleModalUI();
+    scheduleModal.classList.add("open");
+  }
+
+  function closeScheduleModal() {
+    if (scheduleModal) scheduleModal.classList.remove("open");
+  }
+
+  if (scheduleBtn && scheduleModal) {
+    scheduleBtn.addEventListener("click", () => {
+      if (scheduleBtn.disabled) return;
+      openScheduleModal();
+    });
+    scheduleModal.addEventListener("click", (e) => {
+      if (e.target === scheduleModal) closeScheduleModal();
+    });
+    if (scheduleCancel) scheduleCancel.addEventListener("click", closeScheduleModal);
+    if (scheduleRepeat) scheduleRepeat.addEventListener("change", updateScheduleModalUI);
+    if (scheduleDate) scheduleDate.addEventListener("change", updateScheduleModalUI);
+
+    scheduleForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!editor.value.trim()) {
+        showToast("error", "Editor is empty");
+        return;
+      }
+      const fd = new FormData(scheduleForm);
+      fd.set("text", editor.value);
+
+      if (scheduleSubmit) scheduleSubmit.disabled = true;
+      try {
+        const res = await fetch("/schedule", { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          showToast("error", `Schedule failed: ${data.error || res.status}`);
+          return;
+        }
+        const n = data.count || 1;
+        const noun = n === 1 ? "task" : "tasks";
+        showToast("success", `Scheduled ${n} ${noun}: ${data.rule}`);
+        closeScheduleModal();
+      } catch (err) {
+        showToast("error", `Network error: ${err.message}`);
+      } finally {
+        if (scheduleSubmit) scheduleSubmit.disabled = false;
+      }
+    });
+  }
 
   // ---- Cheatsheet modal ----
 

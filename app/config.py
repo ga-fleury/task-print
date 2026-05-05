@@ -11,6 +11,10 @@ class Config:
     image_fetch_timeout: int
     image_max_bytes: int
     receipt_width_px: int = 384
+    default_schedule_time: str = "09:00"
+    scheduler_tz: str = "America/Sao_Paulo"
+    misfire_grace_hours: int = 24
+    scheduler_db_path: str = "data/schedules.sqlite"
 
 
 def load_config() -> Config:
@@ -21,4 +25,8 @@ def load_config() -> Config:
         dry_run=os.environ.get("DRY_RUN", "0") in ("1", "true", "True"),
         image_fetch_timeout=int(os.environ.get("IMAGE_FETCH_TIMEOUT", "5")),
         image_max_bytes=int(os.environ.get("IMAGE_MAX_BYTES", str(5 * 1024 * 1024))),
+        default_schedule_time=os.environ.get("DEFAULT_SCHEDULE_TIME", "09:00"),
+        scheduler_tz=os.environ.get("SCHEDULER_TZ", os.environ.get("TZ", "America/Sao_Paulo")),
+        misfire_grace_hours=int(os.environ.get("MISFIRE_GRACE_HOURS", "24")),
+        scheduler_db_path=os.environ.get("SCHEDULER_DB_PATH", "data/schedules.sqlite"),
     )
