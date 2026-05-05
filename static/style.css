@@ -191,7 +191,9 @@ main {
   margin: 0.35rem 0;
   padding-left: 1.4rem;
 }
+.strip ul { list-style-type: '- '; }
 .strip li { margin: 0.15rem 0; }
+.strip ul li { padding-left: 0.25rem; }
 
 .strip blockquote {
   margin: 0.4rem 0;

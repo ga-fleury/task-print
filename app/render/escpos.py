@@ -56,12 +56,19 @@ class EscposRenderer:
 
     def _apply(self) -> None:
         s = self._style
-        self.printer.set(
-            align=s.align,
-            bold=s.bold,
-            double_height=s.double_height,
-            double_width=s.double_width,
-        )
+        if s.double_height or s.double_width:
+            self.printer.set(
+                align=s.align,
+                bold=s.bold,
+                double_height=s.double_height,
+                double_width=s.double_width,
+            )
+        else:
+            self.printer.set(
+                align=s.align,
+                bold=s.bold,
+                normal_textsize=True,
+            )
 
     def _block_prefix(self) -> str:
         return "> " * self._quote_depth + "  " * len(self._list_stack)
@@ -111,7 +118,7 @@ class EscposRenderer:
         if level == 1:
             self._push_style(bold=True, double_height=True, double_width=True)
         elif level == 2:
-            self._push_style(bold=True, double_height=True)
+            self._push_style(bold=True, double_width=True)
         else:
             self._push_style(bold=True)
         inline = tokens[i + 1]
@@ -181,7 +188,7 @@ class EscposRenderer:
         elif list_type == "ol":
             bullet = f"{counter}. "
         else:
-            bullet = "* "
+            bullet = "- "
 
         if first_para_idx >= 0:
             self.printer.text(quote + indent + bullet)
