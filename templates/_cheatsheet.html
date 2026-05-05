@@ -1,0 +1,50 @@
+<div id="cheatsheet-modal" class="modal" role="dialog" aria-labelledby="cheatsheet-title" aria-modal="true">
+  <div class="modal-content">
+    <h2 id="cheatsheet-title">Syntax cheatsheet</h2>
+
+    <h3>Separator</h3>
+    <p>Three semicolons on their own line splits tasks. Each chunk is its own strip with a partial cut.</p>
+    <pre>;;;</pre>
+
+    <h3>Headings</h3>
+    <pre># Big title (2x2, bold)
+## Medium heading (2x height, bold)
+### Small bold heading</pre>
+
+    <h3>Lists &amp; checkboxes</h3>
+    <pre>- bullet
+1. numbered
+- [ ] task to tick with a pen
+- [x] completed task</pre>
+
+    <h3>Bold</h3>
+    <pre>**bold text**</pre>
+    <p><em>Italic</em> and <s>strikethrough</s> are silently dropped on print (ESC/POS limitation).</p>
+
+    <h3>Blockquote, code, table</h3>
+    <pre>&gt; quoted line</pre>
+    <pre>```
+code block (printed verbatim)
+```</pre>
+    <p>Tables work but are tight on 48 columns.</p>
+
+    <h3>QR codes</h3>
+    <pre>```qr
+https://example.com
+```</pre>
+    <p>Or any payload: <code>WIFI:T:WPA;S:MySSID;P:hunter2;;</code> for Wi-Fi, vCards, plain text.</p>
+
+    <h3>Images</h3>
+    <ul>
+      <li>Type <code>![alt](https://...)</code> for a URL</li>
+      <li>Drag a file into the editor</li>
+      <li>Paste a clipboard image (Ctrl/Cmd + V)</li>
+    </ul>
+    <p>Images are resized to 384px wide before insertion (and again before printing).</p>
+
+    <h3>Keyboard</h3>
+    <p><code>Ctrl/Cmd + Enter</code> prints. <code>Esc</code> closes this modal.</p>
+
+    <button id="cheatsheet-close" class="btn-secondary" type="button">Close</button>
+  </div>
+</div>

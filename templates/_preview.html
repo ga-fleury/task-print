@@ -1,0 +1,11 @@
+{% if strips %}
+  {% for s in strips %}
+  <article class="strip" data-index="{{ s.index }}">
+    <div class="strip-header">{{ s.timestamp }}</div>
+    <div class="strip-body">{{ s.html | safe }}</div>
+  </article>
+  {% if not loop.last %}<div class="strip-cut">- - - - - -&nbsp;&nbsp;cut&nbsp;&nbsp;- - - - - -</div>{% endif %}
+  {% endfor %}
+{% else %}
+  <div class="empty-preview">No tasks yet. Use <code>;;;</code> on its own line to separate tasks.</div>
+{% endif %}

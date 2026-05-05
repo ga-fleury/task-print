@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block body %}
+<header class="app-header">
+  <h1>
+    print-task
+    {% if dry_run %}<span class="dry-run-badge" title="DRY_RUN=1: no actual printing">DRY RUN</span>{% endif %}
+  </h1>
+  <button id="cheatsheet-btn" class="icon-btn" type="button" aria-label="Syntax help">?</button>
+</header>
+
+<nav class="tabs" aria-label="View toggle">
+  <button id="tab-edit" type="button" class="active">Edit</button>
+  <button id="tab-preview" type="button">Preview</button>
+</nav>
+
+<main>
+  <section class="pane pane-edit" aria-label="Editor">
+    <div class="pane-header">Markdown</div>
+    <textarea
+      id="editor"
+      name="text"
+      hx-post="/render"
+      hx-trigger="input changed delay:300ms"
+      hx-target="#preview"
+      hx-swap="innerHTML"
+      placeholder="# Buy groceries&#10;- [ ] milk&#10;- [ ] eggs&#10;;;;&#10;# Call dentist"
+      autocapitalize="sentences"
+      spellcheck="true"
+    ></textarea>
+  </section>
+
+  <section class="pane pane-preview" aria-label="Preview">
+    <div class="pane-header">Preview</div>
+    <div id="preview" class="preview-scroll">
+      <div class="empty-preview">Type to see strips here.</div>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <button id="print-btn" type="button" class="btn-primary" disabled>
+    <span id="print-label">Print</span>
+  </button>
+  <button id="test-btn" type="button" class="btn-secondary" title="Print a fixed sample strip to verify the printer">
+    Test print
+  </button>
+  <span class="footer-hint">Ctrl/Cmd + Enter to print</span>
+</footer>
+
+<div id="toasts" aria-live="polite"></div>
+
+{% include "_cheatsheet.html" %}
+{% endblock %}
