@@ -5,10 +5,12 @@ import threading
 from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
+from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
@@ -45,9 +47,11 @@ def init_scheduler(config: Config) -> BackgroundScheduler:
     _engine = create_engine(f"sqlite:///{db_path}", future=True)
     _tz = ZoneInfo(config.scheduler_tz)
 
-    jobstore = SQLAlchemyJobStore(engine=_engine)
     _scheduler = BackgroundScheduler(
-        jobstores={"default": jobstore},
+        jobstores={
+            "default": SQLAlchemyJobStore(engine=_engine),
+            "heartbeat": MemoryJobStore(),
+        },
         timezone=_tz,
         job_defaults={
             "coalesce": True,
@@ -56,12 +60,30 @@ def init_scheduler(config: Config) -> BackgroundScheduler:
         },
     )
     _scheduler.start()
+    # Heartbeat: caps the scheduler's longest sleep at ~60s. Without this,
+    # APScheduler can be mid-sleep when the OS suspends, and on resume the
+    # sleep continues counting down from where it was (instead of noticing
+    # wall-clock time has jumped). The heartbeat forces a wakeup ~every
+    # minute, so missed fires get caught up shortly after a suspend.
+    _scheduler.add_job(
+        _heartbeat,
+        trigger=IntervalTrigger(seconds=60),
+        id="_heartbeat",
+        jobstore="heartbeat",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
     atexit.register(_shutdown)
     log.info(
-        "scheduler started (tz=%s, db=%s, grace=%dh)",
+        "scheduler started (tz=%s, db=%s, grace=%dh, heartbeat=60s)",
         config.scheduler_tz, db_path, config.misfire_grace_hours,
     )
     return _scheduler
+
+
+def _heartbeat() -> None:
+    pass
 
 
 def _shutdown() -> None:
