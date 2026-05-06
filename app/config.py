@@ -15,6 +15,10 @@ class Config:
     scheduler_tz: str = "America/Sao_Paulo"
     misfire_grace_hours: int = 24
     scheduler_db_path: str = "data/schedules.sqlite"
+    inbox_enabled: bool = False
+    inbox_server_url: str = ""
+    inbox_worker_token: str = ""
+    inbox_long_poll_timeout: int = 25
 
 
 def load_config() -> Config:
@@ -29,4 +33,8 @@ def load_config() -> Config:
         scheduler_tz=os.environ.get("SCHEDULER_TZ", os.environ.get("TZ", "America/Sao_Paulo")),
         misfire_grace_hours=int(os.environ.get("MISFIRE_GRACE_HOURS", "24")),
         scheduler_db_path=os.environ.get("SCHEDULER_DB_PATH", "data/schedules.sqlite"),
+        inbox_enabled=os.environ.get("INBOX_ENABLED", "0") in ("1", "true", "True"),
+        inbox_server_url=os.environ.get("INBOX_SERVER_URL", "").rstrip("/"),
+        inbox_worker_token=os.environ.get("INBOX_WORKER_TOKEN", ""),
+        inbox_long_poll_timeout=int(os.environ.get("INBOX_LONG_POLL_TIMEOUT", "25")),
     )

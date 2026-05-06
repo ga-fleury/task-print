@@ -57,13 +57,25 @@ def print_test_strip(config: Config) -> None:
         _print_strip(p, md, sample, config)
 
 
-def _print_strip(printer, md, body: str, config: Config) -> None:
+def print_inbox_message(body: str, header_extra: str | None, config: Config) -> None:
+    md = make_parser()
+    with print_lock(), open_printer(config) as p:
+        try:
+            p.hw("init")
+        except Exception:
+            log.warning("printer init failed; continuing")
+        _print_strip(p, md, body, config, header_extra=header_extra)
+
+
+def _print_strip(printer, md, body: str, config: Config, header_extra: str | None = None) -> None:
     header = format_header()
     try:
         printer.set(font="b", align="left", bold=False)
     except Exception:
         printer.set(align="left", bold=False)
     printer.text(header + "\n")
+    if header_extra:
+        printer.text(header_extra + "\n")
     printer.set()
 
     tokens = md.parse(body)

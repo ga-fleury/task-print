@@ -3,9 +3,10 @@ from datetime import date, time
 
 from flask import Flask, jsonify, render_template, request
 
-from . import scheduler as sched_mod
+from . import inbox_history, scheduler as sched_mod
 from .config import load_config
 from .header import format_header
+from .inbox_worker import start_worker as start_inbox_worker
 from .print_job import PrintFailure, print_tasks, print_test_strip
 from .render import make_parser, render_html
 from .run_history import init_history, list_recent
@@ -29,6 +30,7 @@ def create_app() -> Flask:
 
     sched_mod.init_scheduler(config)
     init_history(sched_mod.get_engine())
+    start_inbox_worker(config, sched_mod.get_engine())
 
     @app.get("/")
     def index():
@@ -159,8 +161,17 @@ def create_app() -> Flask:
             return jsonify({"ok": False, "error": "Not found"}), 404
         return jsonify({"ok": True})
 
+    @app.get("/inbox/failed")
+    def inbox_failed_page():
+        rows = inbox_history.list_recent(sched_mod.get_engine(), 20)
+        return render_template(
+            "inbox_failed.html",
+            rows=rows,
+            dry_run=config.dry_run,
+        )
+
     @app.get("/healthz")
     def healthz():
-        return jsonify({"ok": True, "dry_run": config.dry_run})
+        return jsonify({"ok": True, "dry_run": config.dry_run, "inbox": config.inbox_enabled})
 
     return app

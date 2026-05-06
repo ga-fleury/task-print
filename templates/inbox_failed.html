@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block body %}
+<header class="app-header">
+  <h1>
+    print-task — Inbox dead-letter
+    {% if dry_run %}<span class="dry-run-badge" title="DRY_RUN=1: no actual printing">DRY RUN</span>{% endif %}
+  </h1>
+  <div class="header-actions">
+    <a href="/" class="header-link">← Editor</a>
+    <a href="/schedules" class="header-link">Schedules</a>
+  </div>
+</header>
+
+<main class="schedules-main">
+  <section class="schedules-section">
+    <div class="pane-header">Failed inbox messages ({{ rows|length }})</div>
+    {% if rows %}
+    <ul class="history-list">
+      {% for r in rows %}
+      <li class="history-row history-failed">
+        <div class="history-ts">{{ r.ts.strftime("%a %b %d, %H:%M:%S") }}</div>
+        <div class="history-rule">
+          {% if r.link_label %}from {{ r.link_label }}{% endif %}
+          {% if r.sender_name %} · {{ r.sender_name }}{% endif %}
+          <span class="muted">(server msg #{{ r.server_msg_id }})</span>
+        </div>
+        <div class="history-preview">{{ r.body_preview }}</div>
+        {% if r.error %}<div class="history-error">{{ r.error }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-preview" style="padding:1.5rem 1rem;">No failed inbox messages.</div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
