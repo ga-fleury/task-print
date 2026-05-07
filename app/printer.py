@@ -54,3 +54,13 @@ def print_lock() -> Iterator[None]:
         yield
     finally:
         _print_lock.release()
+
+
+def apply_density(p, config: Config) -> None:
+    if config.printer_density is None:
+        return
+    n = max(0, min(8, config.printer_density))
+    try:
+        p._raw(b"\x1d|" + bytes([n]))
+    except Exception:
+        log.warning("set density failed; continuing")

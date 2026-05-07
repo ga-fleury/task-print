@@ -10,6 +10,7 @@ class Config:
     dry_run: bool
     image_fetch_timeout: int
     image_max_bytes: int
+    printer_density: int | None = None
     receipt_width_px: int = 384
     default_schedule_time: str = "09:00"
     scheduler_tz: str = "America/Sao_Paulo"
@@ -22,6 +23,11 @@ class Config:
 
 
 def load_config() -> Config:
+    density_raw = os.environ.get("PRINTER_DENSITY", "").strip()
+    printer_density = int(density_raw) if density_raw else None
+    if printer_density is not None:
+        printer_density = max(0, min(8, printer_density))
+
     return Config(
         printer_host=os.environ.get("PRINTER_HOST", "192.168.15.26"),
         printer_port=int(os.environ.get("PRINTER_PORT", "9100")),
@@ -29,6 +35,7 @@ def load_config() -> Config:
         dry_run=os.environ.get("DRY_RUN", "0") in ("1", "true", "True"),
         image_fetch_timeout=int(os.environ.get("IMAGE_FETCH_TIMEOUT", "5")),
         image_max_bytes=int(os.environ.get("IMAGE_MAX_BYTES", str(5 * 1024 * 1024))),
+        printer_density=printer_density,
         default_schedule_time=os.environ.get("DEFAULT_SCHEDULE_TIME", "09:00"),
         scheduler_tz=os.environ.get("SCHEDULER_TZ", os.environ.get("TZ", "America/Sao_Paulo")),
         misfire_grace_hours=int(os.environ.get("MISFIRE_GRACE_HOURS", "24")),
