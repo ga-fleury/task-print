@@ -19,7 +19,7 @@ def _build_header_extra(label: str | None, sender: str | None) -> str | None:
         parts.append(f"from {label}")
     if sender:
         parts.append(sender)
-    return "\n".join(parts) if parts else None
+    return " - ".join(parts) if parts else None
 
 
 def _post_ack(config: Config, msg_id: int, status: str, error: str | None) -> dict | None:
