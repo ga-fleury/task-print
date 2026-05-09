@@ -64,3 +64,17 @@ def apply_density(p, config: Config) -> None:
         p._raw(b"\x1d|" + bytes([n]))
     except Exception:
         log.warning("set density failed; continuing")
+
+
+def apply_charset(p) -> None:
+    # Many ESC/POS clones default to Kanji (double-byte CJK) mode, which mangles
+    # accented Latin chars as Chinese glyphs. Cancel it and select CP850 so
+    # Portuguese characters (ç, ã, õ, é, …) round-trip correctly.
+    try:
+        p._raw(b"\x1c.")
+    except Exception:
+        log.warning("cancel kanji mode failed; continuing")
+    try:
+        p.charcode("CP850")
+    except Exception:
+        log.warning("set charcode CP850 failed; continuing")

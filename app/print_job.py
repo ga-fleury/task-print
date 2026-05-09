@@ -2,7 +2,7 @@ import logging
 
 from .config import Config
 from .header import format_header
-from .printer import apply_density, open_printer, print_lock
+from .printer import apply_charset, apply_density, open_printer, print_lock
 from .render import make_parser, render_escpos
 from .splitter import split_tasks
 
@@ -28,6 +28,7 @@ def print_tasks(text: str, config: Config) -> int:
             p.hw("init")
         except Exception:
             log.warning("printer init failed; continuing")
+        apply_charset(p)
         apply_density(p, config)
 
         for idx, body in enumerate(tasks, start=1):
@@ -55,6 +56,7 @@ def print_test_strip(config: Config) -> None:
             p.hw("init")
         except Exception:
             log.warning("printer init failed; continuing")
+        apply_charset(p)
         apply_density(p, config)
         _print_strip(p, md, sample, config)
 
@@ -66,6 +68,7 @@ def print_inbox_message(body: str, header_extra: str | None, config: Config) -> 
             p.hw("init")
         except Exception:
             log.warning("printer init failed; continuing")
+        apply_charset(p)
         apply_density(p, config)
         _print_strip(p, md, body, config, header_extra=header_extra)
 
